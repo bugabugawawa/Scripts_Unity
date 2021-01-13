@@ -1,0 +1,110 @@
+using System.Collections;
+using System.Collections.Generic;
+using UnityEditor;
+using UnityEngine;
+
+[RequireComponent(typeof(MeshFilter))]
+public class CreateMesh : MonoBehaviour
+{
+    Mesh mesh;
+
+    public float steepness;
+    public float lenght;
+    public float offset = 1;
+    public Vector2 direction = new Vector2(1, 0);
+
+    Vector3[] vertices;
+    int[] triangles;
+    Vector3[] normals;
+    Vector2[] uv;
+
+    [SerializeField]
+    public int xSize;
+    [SerializeField]
+    public int zSize;
+
+    // Start is called before the first frame update
+    void Start()
+    {
+        mesh = new Mesh();
+        mesh.Optimize();
+        mesh.OptimizeIndexBuffers();
+        mesh.OptimizeReorderVertexBuffer();
+        GetComponent<MeshFilter>().mesh = mesh;
+        CreateShape();
+        UpdateMesh();
+
+    }
+
+    void CreateShape()
+    {
+        vertices = new Vector3[(xSize + 1) * (zSize + 1)];
+
+        triangles = new int[xSize * zSize * 6];
+
+        normals = new Vector3[(xSize + 1) * (zSize + 1)];
+
+        uv = new Vector2[(xSize + 1) * (zSize + 1)];
+
+        int vert = 0;
+        int tris = 0;
+
+        float k = 2 * Mathf.PI / lenght;
+        float c = Mathf.Sqrt(9.8f / k);
+        float a = steepness / k;
+
+        for (int i = 0, z = 0; z <= zSize; z++)
+        {
+            for (int x = 0; x <= xSize; x++)
+            {
+                Vector2 d = direction.normalized;
+                float f = k * (Vector2.Dot(d, new Vector2(x,z)) - c * offset);
+                float y = a * Mathf.Sin(f);
+
+                vertices[i] = new Vector3(x + a * Mathf.Cos(f), y, z + a * Mathf.Cos(f));
+
+                normals[i] = new Vector3(x + a * Mathf.Cos(f), y, z + a * Mathf.Cos(f));
+
+                uv[i] = new Vector2(x + a * Mathf.Cos(f), z + a * Mathf.Cos(f));
+
+                if (z < zSize && x < xSize)
+                {
+                    triangles[tris + 0] = vert + 0;
+                    triangles[tris + 1] = vert + xSize + 1;
+                    triangles[tris + 2] = vert + 1;
+                    triangles[tris + 3] = vert + 1;
+                    triangles[tris + 4] = vert + xSize + 1;
+                    triangles[tris + 5] = vert + xSize + 2;
+
+                    vert++;
+                    tris += 6;
+                }
+                i++;
+            }
+            vert++;
+        }
+
+    }
+
+    Vector3 Waves(Vector4 wave, Vector3 p)
+    {
+        return new Vector3();
+    }
+
+    void UpdateMesh()
+    {
+        mesh.vertices = vertices;
+        mesh.triangles = triangles;
+        mesh.normals = normals;
+        mesh.uv = uv;
+
+        mesh.RecalculateNormals();
+        mesh.RecalculateTangents();
+        mesh.RecalculateBounds();
+
+        //MeshFilter mfCopy = GetComponent<MeshFilter>();
+        //
+        //AssetDatabase.CreateAsset( mfCopy.mesh, "Assets/Prefabs/Ocean.asset" );
+        //AssetDatabase.SaveAssets();
+    }
+}
