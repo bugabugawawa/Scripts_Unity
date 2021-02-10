@@ -1,0 +1,68 @@
+using System.Collections;
+using System.Collections.Generic;
+using UnityEngine;
+using UnityEngine.UI;
+
+public class Blink : MonoBehaviour
+{
+    //public Image blinkIcon;
+    //private float[] cooldowns = new float[10];
+    // Tenho que da um jeito de armazenar essas variaveis separadamente de maneira melhor para cada skill.
+    [SerializeField]
+    float CD = 5f, coolDown = 0;
+
+    public static Blink blinkSkill;
+
+    Material[] playerMaterial;
+
+    GameObject UIskillImage;
+
+    private void Start()
+    {
+        blinkSkill = this;
+    }
+
+    public void Update()
+    {
+        playerMaterial = SkillsClass.playerMaterial;
+        UIskillImage = GetComponent<SkillsClass>().SkillsUI[0];
+
+        if (Input.GetKeyDown(KeyCode.Alpha1) && SkillsClass.lockSkill == false)
+        {
+            if (coolDown < Time.time)
+            {
+                coolDown = Time.time + CD + .8f;
+                StartCoroutine(Blinking(SkillsClass.player));
+            }
+        }
+    }
+    
+    IEnumerator Blinking(GameObject player)
+    {
+        float ft = 0f;
+        for (; ft <= 1f; ft += 0.1f)
+        {
+            for (int i = 0; i < playerMaterial.Length; i++)
+            {
+                playerMaterial[i].SetFloat("Vector1_903976d422304d719e1d2cd0ca756b9c", ft);
+            }
+            yield return new WaitForSeconds(.1f);
+        }
+        player.transform.position = new Vector3(player.transform.position.x - player.transform.forward.x * 25f, player.transform.position.y, player.transform.position.z - player.transform.forward.z * 25f);
+        for (; ft >= 0; ft -= 0.1f)
+        {
+            for (int i = 0; i < playerMaterial.Length; i++)
+            {
+                playerMaterial[i].SetFloat("Vector1_903976d422304d719e1d2cd0ca756b9c", ft);
+            }
+            yield return new WaitForSeconds(.1f);
+        }
+        for (float cd = 0f; cd < CD; cd += 0.1f)
+        {
+            UIskillImage.GetComponent<Image>().fillAmount = cd / CD;
+            yield return new WaitForSeconds(.1f);
+        }
+
+    }
+
+}
